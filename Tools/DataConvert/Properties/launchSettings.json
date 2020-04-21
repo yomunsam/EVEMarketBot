@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DataConvert": {
+      "commandName": "Project",
+      "commandLineArgs": "--prop C:\\Users\\yomun\\Downloads\\sde\\fsd\\typeIDs.yaml"
+    }
+  }
+}
