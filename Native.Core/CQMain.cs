@@ -23,6 +23,7 @@ namespace Native.Core
 		public static void Register (IUnityContainer unityContainer)
 		{
 			unityContainer.RegisterType<IGroupMessage, GroupMessage>("group_msg");
+			unityContainer.RegisterType<IPrivateMessage, PersonMessage>("person_msg");
 			//unityContainer.RegisterInstance(typeof(EVEGameDB), "EVEDB", new EVEGameDB());
 		}
 	}

@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using Nekonya.DBs;
+using Nekonya.Config;
+using Native.Core.Domain;
+using Newtonsoft.Json;
 
 namespace Nekonya
 {
@@ -30,5 +34,35 @@ namespace Nekonya
         }
 
         public EVEGameDB EVEDB { get; private set; } = new EVEGameDB();
+
+        public MarketDB MarketDB { get; private set; } = new MarketDB();
+        public EVEMarketConfig Config { get; private set; }
+
+        public NekoCore()
+        {
+            //初始化配置文件
+            string conf_path = Path.Combine(AppData.CQApi.AppDirectory, "config.json");
+            if (File.Exists(conf_path))
+            {
+                try
+                {
+                    var json = File.ReadAllText(conf_path, Encoding.UTF8);
+                    Config = JsonConvert.DeserializeObject<EVEMarketConfig>(json);
+                }
+                catch { }
+            }
+
+            if(Config == null)
+            {
+                Config = new EVEMarketConfig();
+                File.WriteAllText(conf_path, JsonConvert.SerializeObject(this.Config),Encoding.UTF8);
+            }
+        }
+
+        public void SaveConfig()
+        {
+            string conf_path = Path.Combine(AppData.CQApi.AppDirectory, "config.json");
+            File.WriteAllText(conf_path, JsonConvert.SerializeObject(this.Config), Encoding.UTF8);
+        }
     }
 }
