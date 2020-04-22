@@ -162,11 +162,135 @@ namespace Nekonya.Jitas
                     msg.FromGroup.SendGroupMessage(result);
                 }
             }
+        
         }
 
 
         public void QueryFromPersion(CQPrivateMessageEventArgs msg)
         {
+            string message = msg.Message.Text;
+            bool isHans = EVEUtil.IncludeChinese(message);
+            if (!EVEUtil.IsSafeSqlString(message))
+            {
+                msg.FromQQ.SendPrivateMessage(isHans ? $"您要查询的内容不安全：{message}" : $"The content you want to query is not secure: {message}");
+                return;
+            }
+            if (EVEUtil.ParseJitaMsg(msg.Message.Text, out var source, out List<string> queryText))
+            {
+                //是否命中特殊词库
+                if (this.MarketDB.TryGetValue(source, out string _v))
+                {
+                    queryText.Clear();
+                    queryText.Add(_v);
+                }
+
+                long _id = -1;
+                bool flag = false;
+                string final_name_cn = string.Empty;
+                string final_name_en = string.Empty;
+                foreach (var item in queryText)
+                {
+                    if (EVEDB.TryGetIdByName_CN(item, out _id, out final_name_cn, out final_name_en))
+                    {
+
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag)
+                {
+                    if (source.Length >= 2)
+                    {
+                        if (isHans)
+                        {
+                            List<string> fuzzy = EVEDB.LIKEQuery_CN(source);
+                            if (fuzzy.Count == 1)
+                            {
+                                if (!EVEDB.TryGetIdByName_CN(fuzzy[0], out _id, out final_name_cn, out final_name_en))
+                                {
+                                    flag = true;
+                                }
+                            }
+                            else if (fuzzy.Count > 1)
+                            {
+                                var __re_mes = "您是否要查询以下物品：";
+                                foreach (var item in fuzzy)
+                                {
+                                    __re_mes += "\n" + item;
+                                }
+                                msg.FromQQ.SendPrivateMessage(__re_mes);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            List<string> fuzzy = EVEDB.LIKEQuery_EN(source);
+                            if (fuzzy.Count == 1)
+                            {
+                                if (!EVEDB.TryGetIdByName_EN(fuzzy[0], out _id, out final_name_cn, out final_name_en))
+                                {
+                                    flag = true;
+                                }
+                            }
+                            else if (fuzzy.Count > 1)
+                            {
+                                var __re_mes = "Do you want to check the following items：";
+                                foreach (var item in fuzzy)
+                                {
+                                    __re_mes += "\n" + item;
+                                }
+                                msg.FromQQ.SendPrivateMessage(__re_mes);
+                                return;
+                            }
+                        }
+                    }
+                }
+                if (!flag)
+                {
+                    msg.FromQQ.SendPrivateMessage(isHans ? $"未找到相关物品: {source}" : $"The content you want to query is not: {source}");
+                    return;
+                }
+                //向EVE查询物价
+                string url = $"https://www.ceve-market.org/api/market/region/10000002/type/{_id}.json";
+                string url_world_server = $"https://www.ceve-market.org/tqapi/market/region/10000002/type/{_id}.json";
+                var http_result = HttpWebClient.Get(url, true);
+                var http_result_ws = HttpWebClient.Get(url_world_server, true); //世界服
+                var http_text = Encoding.UTF8.GetString(http_result);
+                var http_text_ws = Encoding.UTF8.GetString(http_result_ws);
+
+                string result = "";
+                bool flag_2 = false;
+                try
+                {
+                    var model = JsonConvert.DeserializeObject<JitaJsonModel>(http_text);
+                    result += $"吉他 - {final_name_cn}\n最低售价：{string.Format("{0:N2}", model.sell.min)} ISK\n最高收单：{string.Format("{0:N2}", model.buy.max)} ISK\n";
+                    flag_2 = true;
+                }
+                catch
+                {
+                    result += "查询出错。\n";
+                }
+
+                try
+                {
+                    var model_ws = JsonConvert.DeserializeObject<JitaJsonModel>(http_text_ws);
+                    result += $"\nJita - {final_name_en}\nMin Sell: {string.Format("{0:N2}", model_ws.sell.min)} ISK\nMax Buy: {string.Format("{0:N2}", model_ws.buy.max)} ISK";
+                    flag_2 = true;
+                }
+                catch
+                {
+                    result += "\n查询出错。";
+                }
+
+                if (!flag_2)
+                {
+                    msg.FromQQ.SendPrivateMessage("查询出错");
+                }
+                else
+                {
+                    msg.FromQQ.SendPrivateMessage(result);
+                }
+            }
 
         }
 

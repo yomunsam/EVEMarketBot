@@ -64,7 +64,7 @@ namespace Native.App.Export
 			// 反射获取 AppData 实例	
 			Type appDataType = typeof (AppData);	
 			// 注册一个 CQApi 实例	
-			AppInfo appInfo = new AppInfo ("io.nekonya.evemarket.bot", 1, 9, "EVE市场姬", "3.0.0", 3, "yomunsam", "EVE市场姬-Nekonya Studio", authCode);	
+			AppInfo appInfo = new AppInfo ("io.nekonya.evemarket.bot", 1, 9, "EVE市场姬", "3.0.1", 3, "yomunsam", "EVE市场姬-Nekonya Studio", authCode);	
 			appDataType.GetRuntimeProperty ("CQApi").GetSetMethod (true).Invoke (null, new object[] { new CQApi (appInfo) });	
 			AppData.UnityContainer.RegisterInstance<CQApi> ("io.nekonya.evemarket.bot", AppData.CQApi);	
 			// 向容器注册一个 CQLog 实例	
@@ -103,13 +103,13 @@ namespace Native.App.Export
 			/*	
 			 * Id: 1	
 			 * Type: 21	
-			 * Name: 私聊消息处理	
+			 * Name: person_msg	
 			 * Function: _eventPrivateMsg	
 			 * Priority: 30000	
 			 */	
-			if (AppData.UnityContainer.IsRegistered<IPrivateMessage> ("私聊消息处理"))	
+			if (AppData.UnityContainer.IsRegistered<IPrivateMessage> ("person_msg"))	
 			{	
-				Event_eventPrivateMsgHandler += AppData.UnityContainer.Resolve<IPrivateMessage> ("私聊消息处理").PrivateMessage;	
+				Event_eventPrivateMsgHandler += AppData.UnityContainer.Resolve<IPrivateMessage> ("person_msg").PrivateMessage;	
 			}	
 			
 			/*	
@@ -240,7 +240,7 @@ namespace Native.App.Export
 		/// 事件回调, 以下是对应 Json 文件的信息	
 		/// <para>Id: 1</para>	
 		/// <para>Type: 21</para>	
-		/// <para>Name: 私聊消息处理</para>	
+		/// <para>Name: person_msg</para>	
 		/// <para>Function: _eventPrivateMsg</para>	
 		/// <para>Priority: 30000</para>	
 		/// <para>IsRegex: False</para>	
@@ -251,7 +251,7 @@ namespace Native.App.Export
 		{	
 			if (Event_eventPrivateMsgHandler != null)	
 			{	
-				CQPrivateMessageEventArgs args = new CQPrivateMessageEventArgs (AppData.CQApi, AppData.CQLog, 1, 21, "私聊消息处理", "_eventPrivateMsg", 30000, subType, msgId, fromQQ, msg.ToString(CQApi.DefaultEncoding), false);	
+				CQPrivateMessageEventArgs args = new CQPrivateMessageEventArgs (AppData.CQApi, AppData.CQLog, 1, 21, "person_msg", "_eventPrivateMsg", 30000, subType, msgId, fromQQ, msg.ToString(CQApi.DefaultEncoding), false);	
 				Event_eventPrivateMsgHandler (typeof (CQEventExport), args);	
 				return (int)(args.Handler ? CQMessageHandler.Intercept : CQMessageHandler.Ignore);	
 			}	
