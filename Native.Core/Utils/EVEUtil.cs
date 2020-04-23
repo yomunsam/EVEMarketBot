@@ -37,20 +37,29 @@ namespace Nekonya
             return true;
         }
 
-        public static void GetQueryStr(ref string scoreStr, ref List<string> queryStr)
+        public static void GetQueryStr(ref string sourceStr, ref List<string> queryStr)
         {
-            if (scoreStr.StartsWith("海") && !scoreStr.StartsWith("海军型"))
+            if (sourceStr.StartsWith("海") && !sourceStr.StartsWith("海军型"))
             {
-                if (scoreStr.EndsWith("级"))
-                    queryStr.Add(scoreStr.Substring(1,scoreStr.Length -1) + "海军型");
+                if (sourceStr.EndsWith("级"))
+                    queryStr.Add(sourceStr.Substring(1,sourceStr.Length -1) + "海军型");
                 else
-                    queryStr.Add(scoreStr.Substring(1, scoreStr.Length - 1) + "级海军型");
+                    queryStr.Add(sourceStr.Substring(1, sourceStr.Length - 1) + "级海军型");
             }
 
-            if (!scoreStr.EndsWith("级") && !scoreStr.EndsWith("海军型"))
+            if (!sourceStr.EndsWith("级") && !sourceStr.EndsWith("海军型"))
             {
-                queryStr.Add(scoreStr + "级");
+                queryStr.Add(sourceStr + "级");
             }
+
+            if (sourceStr.EndsWith("I") && !sourceStr.EndsWith(" I"))
+                queryStr.Add(sourceStr.Substring(0, sourceStr.Length - 1) + " I");
+
+            if (sourceStr.EndsWith("II") && !sourceStr.EndsWith(" II"))
+                queryStr.Add(sourceStr.Substring(0, sourceStr.Length - 2) + " II");
+
+            if (!sourceStr.EndsWith("I"))
+                queryStr.Add(sourceStr + " I");
         }
 
         public static bool ParseBindMsg(string msg, out string key,out string value)
