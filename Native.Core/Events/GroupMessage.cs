@@ -15,7 +15,13 @@ namespace Nekonya.Events
     {
         void IGroupMessage.GroupMessage(object sender, CQGroupMessageEventArgs e)
         {
-            string msg = e.Message.Text;
+            string msg = e.Message.Text.Trim();
+            if(msg.ToLower().Equals(".jita"))
+            {
+                e.FromGroup.SendGroupMessage("您可使用如下命令查询商品物价:\nYou can use the following commands to check commodity prices\n\n.jita item_name");
+                e.Handler = true;
+                return;
+            }
             if (msg.ToLower().StartsWith(".jita ")) //吉他市场查询
             {
                 Jitas.Jitas.Instance.QueryFromGroup(e);
@@ -29,7 +35,7 @@ namespace Nekonya.Events
                 if (!string.IsNullOrEmpty(result))
                 {
                     var at_msg = e.FromQQ.CQCode_At();
-                    e.FromGroup.SendGroupMessage(at_msg, result);
+                    e.FromGroup.SendGroupMessage(at_msg," ", result);
                 }
                 e.Handler = true;
                 return;
@@ -41,7 +47,7 @@ namespace Nekonya.Events
                 if (!string.IsNullOrEmpty(result))
                 {
                     var at_msg = e.FromQQ.CQCode_At();
-                    e.FromGroup.SendGroupMessage(at_msg, result);
+                    e.FromGroup.SendGroupMessage(at_msg," ", result);
                 }
                 e.Handler = true;
                 return;
@@ -53,7 +59,42 @@ namespace Nekonya.Events
                 if (!string.IsNullOrEmpty(result))
                 {
                     var at_msg = e.FromQQ.CQCode_At();
-                    e.FromGroup.SendGroupMessage(at_msg, result);
+                    e.FromGroup.SendGroupMessage(at_msg," ", result);
+                }
+                e.Handler = true;
+                return;
+            }
+
+            if (msg.ToLower().StartsWith(".suit ")) //套装查询
+            {
+                var result = Jitas.Jitas.Instance.QuerySuit(msg);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    e.FromGroup.SendGroupMessage(result);
+                }
+                e.Handler = true;
+                return;
+            }
+
+            if (msg.ToLower().StartsWith(".bindsuit ")) //绑定套装俗称词库
+            {
+                var result = Jitas.Jitas.Instance.Bind_SuitCommonly_Name(msg, e.FromQQ);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    var at_msg = e.FromQQ.CQCode_At();
+                    e.FromGroup.SendGroupMessage(at_msg, " ",result);
+                }
+                e.Handler = true;
+                return;
+            }
+
+            if (msg.ToLower().StartsWith(".unbindsuit ")) //移除套装俗称词库
+            {
+                var result = Jitas.Jitas.Instance.Remove_SuitCommonly_Name(msg, e.FromQQ);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    var at_msg = e.FromQQ.CQCode_At();
+                    e.FromGroup.SendGroupMessage(at_msg, " ", result);
                 }
                 e.Handler = true;
                 return;

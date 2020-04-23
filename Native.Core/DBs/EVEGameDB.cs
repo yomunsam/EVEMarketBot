@@ -57,7 +57,7 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name=\"{name}\"";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name=\"{name}\" COLLATE NOCASE";
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {
@@ -77,6 +77,28 @@ namespace Nekonya.DBs
             }
         }
     
+        public bool TryGetNameByID(long id, out string cn_name, out string en_name)
+        {
+            lock (this)
+            {
+                using (var cmd = new SQLiteCommand())
+                {
+                    cmd.Connection = cn;
+                    cmd.CommandText = $"SELECT * FROM Props WHERE ID={id}";
+                    var reader = cmd.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        cn_name = reader.GetString(3);
+                        en_name = reader.GetString(2);
+                        return true;
+                    }
+                    cn_name = string.Empty;
+                    en_name = string.Empty;
+                    return false;
+                }
+            }
+        }
+
         /// <summary>
         /// 中文 模糊查询
         /// </summary>
@@ -133,7 +155,7 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name LIKE '%{name}%'";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name LIKE '%{name}%' COLLATE NOCASE";
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {

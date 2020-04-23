@@ -14,7 +14,7 @@ namespace Nekonya
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public static bool ParseJitaMsg(string msg, out string sourceStr, out List<string> queryStr)
+        public static bool ParseJitaMsg(string msg, out string sourceStr, out List<string> queryStr, ref bool isHans)
         {
             sourceStr = default;
             queryStr = new List<string>();
@@ -23,8 +23,16 @@ namespace Nekonya
             sourceStr = msg.Substring(5)?.Trim();
             if (string.IsNullOrEmpty(sourceStr)) return false;
 
-            queryStr.Add(sourceStr);
-            GetQueryStr(ref sourceStr, ref queryStr);
+            string query_source_text = sourceStr; //用于查询的特殊词库
+            //检查是否命中特殊词库
+            if(NekoCore.Instance.MarketDB.TryGetCommonlyValue(sourceStr,out string _v))
+            {
+                query_source_text = _v;
+                isHans = EVEUtil.IncludeChinese(query_source_text);
+            }
+
+            queryStr.Add(query_source_text);
+            GetQueryStr(ref query_source_text, ref queryStr);
 
             return true;
         }
@@ -60,12 +68,38 @@ namespace Nekonya
             return true;
         }
 
+        public static bool ParseBindSuitMsg(string msg, out string key, out string value)
+        {
+            key = default;
+            value = default;
+            if (string.IsNullOrEmpty(msg)) return false;
+            if (!msg.ToLower().StartsWith(".bindsuit ")) return false;
+            var _str = msg.Substring(9)?.Trim();
+            if (string.IsNullOrEmpty(_str)) return false;
+            var str_arr = _str.Split(',');
+            if (str_arr.Length != 2) return false;
+            key = str_arr[0].Trim();
+            value = str_arr[1].Trim();
+            return true;
+        }
+
         public static bool ParseUnBindMsg(string msg, out string key)
         {
             key = default;
             if (string.IsNullOrEmpty(msg)) return false;
             if (!msg.ToLower().StartsWith(".unbind ")) return false;
             var _str = msg.Substring(7)?.Trim();
+            if (string.IsNullOrEmpty(_str)) return false;
+            key = _str;
+            return true;
+        }
+
+        public static bool ParseUnBindSuitMsg(string msg, out string key)
+        {
+            key = default;
+            if (string.IsNullOrEmpty(msg)) return false;
+            if (!msg.ToLower().StartsWith(".unbind ")) return false;
+            var _str = msg.Substring(11)?.Trim();
             if (string.IsNullOrEmpty(_str)) return false;
             key = _str;
             return true;
@@ -80,6 +114,32 @@ namespace Nekonya
             if (string.IsNullOrEmpty(_str)) return false;
             return long.TryParse(_str, out addQQ);
         }
+
+        /// <summary>
+        /// 解析 套装查询消息
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public static bool ParseSuitMsg(string msg, out string sourceStr, out string query_text, ref bool isHans)
+        {
+            sourceStr = default;
+            query_text = default;
+            if (string.IsNullOrEmpty(msg)) return false;
+            if (!msg.ToLower().StartsWith(".suit ")) return false;
+            sourceStr = msg.Substring(5)?.Trim();
+            if (string.IsNullOrEmpty(sourceStr)) return false;
+
+            query_text = sourceStr; //用于查询的特殊词库
+            //检查是否命中特殊词库
+            if (NekoCore.Instance.MarketDB.TryGet_SuitCommonly_Value(sourceStr, out string _v))
+            {
+                query_text = _v;
+                isHans = EVEUtil.IncludeChinese(query_text);
+            }
+            
+            return true;
+        }
+
 
         /// <summary>
         /// 是否含有不安全的SQL字符

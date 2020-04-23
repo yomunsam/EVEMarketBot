@@ -15,7 +15,14 @@ namespace Nekonya.Events
     {
         public void PrivateMessage(object sender, CQPrivateMessageEventArgs e)
         {
-            string msg = e.Message.Text;
+            string msg = e.Message.Text.Trim();
+
+            if (msg.ToLower().Equals(".jita"))
+            {
+                e.FromQQ.SendPrivateMessage("您可使用如下命令查询商品物价:\nYou can use the following commands to check commodity prices\n\n.jita item_name");
+                e.Handler = true;
+                return;
+            }
             if (msg.ToLower().StartsWith(".jita ")) //吉他市场查询
             {
                 Jitas.Jitas.Instance.QueryFromPersion(e);
@@ -51,6 +58,37 @@ namespace Nekonya.Events
                 e.Handler = true;
                 return;
             }
+
+            if (msg.ToLower().StartsWith(".suit"))
+            {
+                var result = Jitas.Jitas.Instance.QuerySuit(msg);
+                if (!string.IsNullOrEmpty(result))
+                    e.FromQQ.SendPrivateMessage(result);
+                e.Handler = true;
+                return;
+            }
+
+
+            if (msg.ToLower().StartsWith(".bindsuit ")) //绑定俗称词库
+            {
+                var result = Jitas.Jitas.Instance.Bind_SuitCommonly_Name(msg, e.FromQQ);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    e.FromQQ.SendPrivateMessage(result);
+                }
+                e.Handler = true;
+                return;
+            }
+
+            if (msg.ToLower().StartsWith(".unbindsuit ")) //移除俗称词库
+            {
+                var result = Jitas.Jitas.Instance.Remove_SuitCommonly_Name(msg, e.FromQQ);
+                if (!string.IsNullOrEmpty(result))
+                    e.FromQQ.SendPrivateMessage(result);
+                e.Handler = true;
+                return;
+            }
+
         }
     }
 }
