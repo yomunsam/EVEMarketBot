@@ -60,6 +60,9 @@ namespace Nekonya
 
             if (!sourceStr.EndsWith("I"))
                 queryStr.Add(sourceStr + " I");
+
+            if (sourceStr.ToLower().StartsWith("t2"))
+                queryStr.Add(sourceStr.Substring(2, sourceStr.Length - 2) + " II");
         }
 
         public static bool ParseBindMsg(string msg, out string key,out string value)
@@ -157,7 +160,7 @@ namespace Nekonya
         /// <returns></returns>
         public static bool IsSafeSqlString(string str)
         {
-            return !Regex.IsMatch(str, @"[-|;|,|\/|\(|\)|\[|\]|\}|\{|%|@|\*|!|\']");
+            return !Regex.IsMatch(str, @"[|;|,|\/|\(|\)|\[|\]|\}|\{|%|@|\*|!|\']");
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace Nekonya.DBs
                 using(var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN=\"{name}\"";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN=\"{name}\" COLLATE NOCASE";
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {
