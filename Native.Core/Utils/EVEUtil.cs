@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Native.Core.Domain;
 
 namespace Nekonya
 {
@@ -14,27 +15,83 @@ namespace Nekonya
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public static bool ParseJitaMsg(string msg, out string sourceStr, out List<string> queryStr, ref bool isHans)
+        public static bool ParseJitaMsg(string msg, out string sourceStr, out List<string> queryStr,out long num, ref bool isHans)
         {
+            num = 1;
             sourceStr = default;
             queryStr = new List<string>();
             if (string.IsNullOrEmpty(msg)) return false;
             if (!msg.ToLower().StartsWith(".jita ")) return false;
-            sourceStr = msg.Substring(5)?.Trim();
-            if (string.IsNullOrEmpty(sourceStr)) return false;
+            string pure_str = msg.Substring(5)?.Trim();
+            if (string.IsNullOrEmpty(pure_str)) return false;
+            sourceStr = pure_str;
+
+            //检查数量
+            if (TryGetQueryNum(pure_str,'*',out var _num ,out var _text))
+            {
+                sourceStr = _text;
+                num = _num;
+            }
+            else if(TryGetQueryNum(pure_str, ',', out var __num, out var __text))
+            {
+                sourceStr = __text;
+                num = __num;
+            }
+            else if(TryGetQueryNum(pure_str, '×', out var ___num, out var ___text))
+            {
+                sourceStr = ___text;
+                num = ___num;
+            }
+
+            if (num < 1)
+                num = 1;
 
             string query_source_text = sourceStr; //用于查询的特殊词库
+
             //检查是否命中特殊词库
-            if(NekoCore.Instance.MarketDB.TryGetCommonlyValue(sourceStr,out string _v))
+            if (IsSafeSqlString(sourceStr))
             {
-                query_source_text = _v;
-                isHans = EVEUtil.IncludeChinese(query_source_text);
+                if (NekoCore.Instance.MarketDB.TryGetCommonlyValue(sourceStr, out string _v))
+                {
+                    query_source_text = _v;
+                    isHans = EVEUtil.IncludeChinese(query_source_text);
+                }
             }
+            
 
             queryStr.Add(query_source_text);
             GetQueryStr(ref query_source_text, ref queryStr);
 
             return true;
+        }
+
+        private static bool TryGetQueryNum(string text, char signStr, out long num, out string queryPropText)
+        {
+            AppData.CQLog.Info("debug", "查询数量判断，标记符号：" +signStr);
+            num = 1;
+            queryPropText = string.Empty;
+            if (text.IndexOf(signStr) != -1)
+            {
+                var str_arr = text.Split(signStr);
+                if (str_arr.Length != 2)
+                    return false;
+                if (str_arr.Length == 2)
+                {
+                    if (long.TryParse(str_arr[0], out long _num) && !long.TryParse(str_arr[1], out _))
+                    {
+                        queryPropText = str_arr[1];
+                        num = _num;
+                        return true;
+                    }
+                    else if (long.TryParse(str_arr[1], out long __num) && !long.TryParse(str_arr[0], out _))
+                    {
+                        queryPropText = str_arr[0];
+                        num = __num;
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public static void GetQueryStr(ref string sourceStr, ref List<string> queryStr)
@@ -154,13 +211,13 @@ namespace Nekonya
 
 
         /// <summary>
-        /// 是否含有不安全的SQL字符
+        /// 检查是否有SQL注入风险
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
         public static bool IsSafeSqlString(string str)
         {
-            return !Regex.IsMatch(str, @"[|;|,|\/|\(|\)|\[|\]|\}|\{|%|@|\*|!|\']");
+            return !Regex.IsMatch(str, @"[|;|,|\/|\(|\)|\[|\]|\}|\{|%|@|\*|!|\=']");
         }
 
         /// <summary>
@@ -180,6 +237,16 @@ namespace Nekonya
                 }
             }
             return flag;
+        }
+
+        public static bool GetRandomBoolean()
+        {
+            try
+            {
+                Random rd = new Random();
+                return (rd.Next() % 2 == 0);
+            }
+            catch { return false; }
         }
     }
 }

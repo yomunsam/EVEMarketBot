@@ -99,6 +99,24 @@ namespace Nekonya.Events
                 e.Handler = true;
                 return;
             }
+
+            if (msg.ToLower().Equals(".plex")) //月卡查询
+            {
+                var result = Jitas.Jitas.Instance.QueryPLEX();
+                if (!string.IsNullOrEmpty(result))
+                {
+                    e.FromGroup.SendGroupMessage(result);
+                }
+                e.Handler = true;
+                return;
+            }
+
+            if (msg.ToLower().Equals(".help")) //帮助
+            {
+                e.FromGroup.SendGroupMessage(Jitas.Jitas.Instance.GetHelpText());
+                e.Handler = true;
+                return;
+            }
         }
     }
 }

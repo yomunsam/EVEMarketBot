@@ -89,6 +89,22 @@ namespace Nekonya.Events
                 return;
             }
 
+            if (msg.ToLower().Equals(".plex")) //月卡查询
+            {
+                var result = Jitas.Jitas.Instance.QueryPLEX();
+                if (!string.IsNullOrEmpty(result))
+                    e.FromQQ.SendPrivateMessage(result);
+                e.Handler = true;
+                return;
+            }
+            
+            if (msg.ToLower().Equals(".help")) //月卡查询
+            {
+                e.FromQQ.SendPrivateMessage(Jitas.Jitas.Instance.GetHelpText());
+                e.Handler = true;
+                return;
+            }
+
         }
     }
 }

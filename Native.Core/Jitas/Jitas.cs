@@ -35,7 +35,8 @@ namespace Nekonya.Jitas
 
         private EVEGameDB EVEDB = NekoCore.Instance.EVEDB;
         private MarketDB MarketDB = NekoCore.Instance.MarketDB;
-        
+
+        private const long PLEX_ID = 44992;
 
         public void QueryFromGroup(CQGroupMessageEventArgs msg)
         {
@@ -209,6 +210,26 @@ namespace Nekonya.Jitas
 
         }
 
+        /// <summary>
+        /// 月卡查询
+        /// </summary>
+        /// <returns></returns>
+        public string QueryPLEX()
+        {
+            var ws_info = GetPriceInfo(PLEX_ID, true);
+            var cn_info = GetPriceInfo(PLEX_ID, false);
+            if (this.EVEDB.TryGetNameByID(PLEX_ID, out var cn_name, out var en_name))
+            {
+                return GetPriceStringWithNum(ws_info, cn_info, EVEUtil.GetRandomBoolean(), cn_name, en_name, 500);
+            }
+            else
+                return "Error";
+        }
+
+        public string GetHelpText() => $"您可在此处了解市场姬的详细查询命令：\n" +
+            $"マーケットプレイス姫の注文については、こちらでご紹介しています。\n" +
+            $"You can find detailed search orders here.\n\n" +
+            $"https://github.com/yomunsam/EVEMarketBot/wiki/%E6%9F%A5%E8%AF%A2%E5%91%BD%E4%BB%A4%E8%AF%B4%E6%98%8E";
 
         /// <summary>
         /// 吉他查询，私有方法总入口
@@ -219,19 +240,21 @@ namespace Nekonya.Jitas
         {
             bool isHans = EVEUtil.IncludeChinese(message);
 
-            //防注入
-            if (!EVEUtil.IsSafeSqlString(message))
-                return (isHans ? $"您要查询的内容不安全：{message}" : $"The content you want to query is not secure: {message}");
+            
 
             //解析命令
-            if (EVEUtil.ParseJitaMsg(message, out var source, out List<string> queryText, ref isHans))
+            if (EVEUtil.ParseJitaMsg(message, out var source, out List<string> queryText,out long num, ref isHans))
             {
                 long prop_id;
                 string prop_name_hans;
                 string prop_name_en;
 
+                //防注入
+                if (!EVEUtil.IsSafeSqlString(source))
+                    return (isHans ? $"您要查询的内容不安全：{message}" : $"The content you want to query is not secure: {message}");
+
                 //检查数据库
-                if(!this.TryQueryTexts(ref queryText, isHans, out prop_id, out prop_name_hans, out prop_name_en))
+                if (!this.TryQueryTexts(ref queryText, isHans, out prop_id, out prop_name_hans, out prop_name_en))
                 {
                     //未找到，准备混合搜索
                     if(this.TryFuzzyQuery(source,isHans,out string fuzzy_result, out bool _continue, out prop_id, out prop_name_hans, out prop_name_en))
@@ -247,7 +270,8 @@ namespace Nekonya.Jitas
                 PriceInfo? world_server_price = GetPriceInfo(prop_id, true);
                 PriceInfo? cn_server_price = GetPriceInfo(prop_id, false);
 
-                return GetPriceString(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en);
+                return num == 1 ? GetPriceString(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en)
+                    : GetPriceStringWithNum(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en, num);
             }
             else
                 return isHans ? $"无效的查询语句: {message}" : $"Query Invalid: {message}";
@@ -338,6 +362,27 @@ namespace Nekonya.Jitas
         {
             string getHansString(PriceInfo info) => $"吉他 - {prop_name_hans}\n最低售价：{string.Format("{0:N2}", info.MinSell)} ISK\n最高收单：{string.Format("{0:N2}", info.MaxBuy)} ISK";
             string getEnString(PriceInfo info) => $"Jita - {prop_name_en}\nMin Sell: {string.Format("{0:N2}", info.MinSell)} ISK\nMax Buy: {string.Format("{0:N2}", info.MaxBuy)} ISK";
+
+            if (world_server == null && cn_server == null)
+                return isHans ? $"查询出错，内部错误或网络错误：{prop_name_hans}" : $"There is an error in the query, possibly an internal error or a network error: {prop_name_en}";
+
+            return isHans ? $"{(cn_server == null ? "国服查询错误" : getHansString(cn_server.Value))}\n\n{(world_server == null ? "世界服查询错误" : getEnString(world_server.Value))}"
+                : $"{(world_server == null ? "Query world server error." : getEnString(world_server.Value))}\n\n{(cn_server == null ? "Query cn server error" : getHansString(cn_server.Value))}";
+        }
+
+        private string GetPriceStringWithNum(PriceInfo? world_server, PriceInfo? cn_server, bool isHans, string prop_name_hans, string prop_name_en, long num = 1)
+        {
+            string getHansString(PriceInfo info) => $"吉他 - {prop_name_hans}\n" +
+                $"最低售价：{string.Format("{0:N2}", info.MinSell)} ISK\n" +
+                $"最低售价（×{num}）：{string.Format("{0:N2}", info.MinSell * num)} ISK\n" +
+                $"最高收单：{string.Format("{0:N2}", info.MaxBuy)} ISK\n" +
+                $"最高收单（×{num}）：{string.Format("{0:N2}", info.MaxBuy * num)} ISK";
+            
+            string getEnString(PriceInfo info) => $"Jita - {prop_name_en}\n" +
+                $"Min Sell: {string.Format("{0:N2}", info.MinSell)} ISK\n" +
+                $"Min Sell(×{num}): {string.Format("{0:N2}", info.MinSell * num)} ISK\n" +
+                $"Max Buy: {string.Format("{0:N2}", info.MaxBuy)} ISK\n" +
+                $"Max Buy:(×{num}): {string.Format("{0:N2}", info.MaxBuy * num)} ISK";
 
             if (world_server == null && cn_server == null)
                 return isHans ? $"查询出错，内部错误或网络错误：{prop_name_hans}" : $"There is an error in the query, possibly an internal error or a network error: {prop_name_en}";
