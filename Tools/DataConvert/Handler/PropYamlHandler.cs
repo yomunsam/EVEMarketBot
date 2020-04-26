@@ -35,6 +35,9 @@ namespace DataConvert
                     var node = (YamlScalarNode)entry.Key;
                     if (long.TryParse(node.Value, out var id))
                     {
+                        //忽略项
+                        if (IgnoreDefine.Ignore_IDs.Contains(id))
+                            continue;
                         //查询
                         if (db.Props.Any(p => p.ID == id))
                             continue;
