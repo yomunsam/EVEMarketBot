@@ -79,13 +79,13 @@ namespace Nekonya
                 {
                     if (long.TryParse(str_arr[0], out long _num) && !long.TryParse(str_arr[1], out _))
                     {
-                        queryPropText = str_arr[1];
+                        queryPropText = str_arr[1].Trim();
                         num = _num;
                         return true;
                     }
                     else if (long.TryParse(str_arr[1], out long __num) && !long.TryParse(str_arr[0], out _))
                     {
-                        queryPropText = str_arr[0];
+                        queryPropText = str_arr[0].Trim();
                         num = __num;
                         return true;
                     }
