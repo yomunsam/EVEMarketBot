@@ -97,9 +97,11 @@
     <Compile Include="Config\EVEMarketConfig.cs" />
     <Compile Include="DBs\EVEGameDB.cs" />
     <Compile Include="DBs\MarketDB.cs" />
+    <Compile Include="DBs\UserDB.cs" />
     <Compile Include="Domain\AppData.cs" />
     <Compile Include="CQMain.cs" />
     <Compile Include="Events\GroupMessage.cs" />
+    <Compile Include="Events\GroupRequest.cs" />
     <Compile Include="Events\PersonMessage.cs" />
     <Compile Include="Export\CQEventExport.cs">
       <DependentUpon>CQExport.tt</DependentUpon>
@@ -151,7 +153,9 @@
       <Name>Native.Tool</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Enums\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ImportGroup Label=".NET DllExport">
     <Import Project="$(SolutionDir)packages\DllExport.1.6.1\tools\net.r_eg.DllExport.targets" Condition="Exists('$(SolutionDir)packages\DllExport.1.6.1\tools\net.r_eg.DllExport.targets')" Label="8337224c9ad9e356" />

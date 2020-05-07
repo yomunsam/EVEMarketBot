@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace Nekonya
         /// </summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public static bool ParseJitaMsg(string msg, out string sourceStr, out List<string> queryStr,out long num, ref bool isHans)
+        public static bool ParseJitaMsg(string msg, out string sourceStr, out List<string> queryStr, out long num, ref bool isHans)
         {
             num = 1;
             sourceStr = default;
@@ -27,17 +28,17 @@ namespace Nekonya
             sourceStr = pure_str;
 
             //检查数量
-            if (TryGetQueryNum(pure_str,'*',out var _num ,out var _text))
+            if (TryGetQueryNum(pure_str, '*', out var _num, out var _text))
             {
                 sourceStr = _text;
                 num = _num;
             }
-            else if(TryGetQueryNum(pure_str, ',', out var __num, out var __text))
+            else if (TryGetQueryNum(pure_str, ',', out var __num, out var __text))
             {
                 sourceStr = __text;
                 num = __num;
             }
-            else if(TryGetQueryNum(pure_str, '×', out var ___num, out var ___text))
+            else if (TryGetQueryNum(pure_str, '×', out var ___num, out var ___text))
             {
                 sourceStr = ___text;
                 num = ___num;
@@ -57,7 +58,7 @@ namespace Nekonya
                     isHans = EVEUtil.IncludeChinese(query_source_text);
                 }
             }
-            
+
 
             queryStr.Add(query_source_text);
             GetQueryStr(ref query_source_text, ref queryStr);
@@ -67,7 +68,7 @@ namespace Nekonya
 
         private static bool TryGetQueryNum(string text, char signStr, out long num, out string queryPropText)
         {
-            AppData.CQLog.Info("debug", "查询数量判断，标记符号：" +signStr);
+            //AppData.CQLog.Info("debug", "查询数量判断，标记符号：" + signStr);
             num = 1;
             queryPropText = string.Empty;
             if (text.IndexOf(signStr) != -1)
@@ -99,7 +100,7 @@ namespace Nekonya
             if (sourceStr.StartsWith("海") && !sourceStr.StartsWith("海军型"))
             {
                 if (sourceStr.EndsWith("级"))
-                    queryStr.Add(sourceStr.Substring(1,sourceStr.Length -1) + "海军型");
+                    queryStr.Add(sourceStr.Substring(1, sourceStr.Length - 1) + "海军型");
                 else
                     queryStr.Add(sourceStr.Substring(1, sourceStr.Length - 1) + "级海军型");
             }
@@ -122,7 +123,7 @@ namespace Nekonya
                 queryStr.Add(sourceStr.Substring(2, sourceStr.Length - 2) + " II");
         }
 
-        public static bool ParseBindMsg(string msg, out string key,out string value)
+        public static bool ParseBindMsg(string msg, out string key, out string value)
         {
             key = default;
             value = default;
@@ -205,7 +206,7 @@ namespace Nekonya
                 query_text = _v;
                 isHans = EVEUtil.IncludeChinese(query_text);
             }
-            
+
             return true;
         }
 
@@ -248,5 +249,50 @@ namespace Nekonya
             }
             catch { return false; }
         }
+
+        /// <summary>
+        /// 给定一个字符串"11,22,33"，尝试解析成List<long>
+        /// </summary>
+        public static bool TryGetLongListByString(string arr_str, out List<long> result)
+        {
+            if (string.IsNullOrEmpty(arr_str))
+            {
+                result = default;
+                return false;
+            }
+            var str_arr = arr_str.Split(',');
+            result = new List<long>();
+            if(str_arr.Length == 0)
+            {
+                return false;
+                //if (long.TryParse(arr_str, out var _l))
+                //{
+                //    result.Add(_l);
+                //    return true;
+                //}
+                //else
+                //    return false;
+            }
+
+            foreach(var item in str_arr)
+            {
+                if (!long.TryParse(item, out long _v))
+                    return false;
+
+                result.Add(_v);
+            }
+            return true;
+        }
+
+        public static string GetString(IEnumerable<long> long_enumberable)
+        {
+            string result = "";
+            foreach(var item in long_enumberable)
+            {
+                result += item + ",";
+            }
+            return result.Substring(0, result.Length - 1);
+        }
+
     }
 }

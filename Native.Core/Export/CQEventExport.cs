@@ -64,7 +64,7 @@ namespace Native.App.Export
 			// 反射获取 AppData 实例	
 			Type appDataType = typeof (AppData);	
 			// 注册一个 CQApi 实例	
-			AppInfo appInfo = new AppInfo ("io.nekonya.evemarket.bot", 1, 9, "EVE市场姬", "3.0.4", 6, "yomunsam", "EVE市场姬-Nekonya Studio", authCode);	
+			AppInfo appInfo = new AppInfo ("io.nekonya.evemarket.bot", 1, 9, "EVE市场姬", "3.0.5", 7, "yomunsam", "EVE市场姬-Nekonya Studio", authCode);	
 			appDataType.GetRuntimeProperty ("CQApi").GetSetMethod (true).Invoke (null, new object[] { new CQApi (appInfo) });	
 			AppData.UnityContainer.RegisterInstance<CQApi> ("io.nekonya.evemarket.bot", AppData.CQApi);	
 			// 向容器注册一个 CQLog 实例	

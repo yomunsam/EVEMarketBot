@@ -8,6 +8,7 @@ using Nekonya.DBs;
 using Native.Tool.Http;
 using Newtonsoft.Json;
 using Native.Sdk.Cqp.Model;
+using Native.Core.Domain;
 
 namespace Nekonya.Jitas
 {
@@ -35,18 +36,25 @@ namespace Nekonya.Jitas
 
         private EVEGameDB EVEDB = NekoCore.Instance.EVEDB;
         private MarketDB MarketDB = NekoCore.Instance.MarketDB;
+        private UserDB UserDB = NekoCore.Instance.UserDB;
 
         private const long PLEX_ID = 44992;
 
         public void QueryFromGroup(CQGroupMessageEventArgs msg)
         {
-            msg.FromGroup.SendGroupMessage(this.QueryJita(msg.Message.Text.Trim()));
+            long fromQQ = msg.FromQQ.Id;
+            string fromQQ_Name = msg.FromQQ.GetStrangerInfo().Nick ?? "";
+            long fromGroup = msg.FromGroup.Id;
+            string nickname_ingroup = msg.FromGroup.GetGroupMemberInfo(msg.FromQQ).Card;
+            msg.FromGroup.SendGroupMessage(this.QueryJita(msg.Message.Text.Trim(), fromQQ, fromQQ_Name, nickname_ingroup, fromGroup));
         }
 
 
         public void QueryFromPersion(CQPrivateMessageEventArgs msg)
         {
-            msg.FromQQ.SendPrivateMessage(this.QueryJita(msg.Message.Text.Trim()));
+            long fromQQ = msg.FromQQ.Id;
+            string fromQQ_Name = msg.FromQQ.GetStrangerInfo().Nick ?? "";
+            msg.FromQQ.SendPrivateMessage(this.QueryJita(msg.Message.Text.Trim(), fromQQ, fromQQ_Name, string.Empty, -1));
         }
 
         public string BindCommonlyName(string msg, QQ fromQQ) //绑定俗称词库
@@ -236,7 +244,7 @@ namespace Nekonya.Jitas
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        private string QueryJita(string message)
+        private string QueryJita(string message, long fromQQ = -1, string usernickname = "", string nicknameingroup = "", long fromGroup = -1)
         {
             bool isHans = EVEUtil.IncludeChinese(message);
 
@@ -260,15 +268,56 @@ namespace Nekonya.Jitas
                     if(this.TryFuzzyQuery(source,isHans,out string fuzzy_result, out bool _continue, out prop_id, out prop_name_hans, out prop_name_en))
                     {
                         if (!_continue)
+                        {
+                            //登记查询记录
+                            if (fromQQ != -1)
+                            {
+                                try
+                                {
+                                    this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
+                                }
+                                catch (Exception e)
+                                {
+                                    AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
+                                }
+                            }
                             return fuzzy_result;
+                        }
                     }
                     else // 混合搜索没找到
+                    {
+                        //登记查询记录
+                        if (fromQQ != -1)
+                        {
+                            try
+                            {
+                                this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
+                            }
+                            catch (Exception e)
+                            {
+                                AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
+                            }
+                        }
                         return isHans ? $"未找到相关物品: {source}" : $"The content you want to query is not: {source}";
+                    }
                 }
 
                 //可以继续执行
                 PriceInfo? world_server_price = GetPriceInfo(prop_id, true);
                 PriceInfo? cn_server_price = GetPriceInfo(prop_id, false);
+
+                //登记查询
+                if(fromQQ != -1)
+                {
+                    try
+                    {
+                        this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
+                    }
+                    catch(Exception e)
+                    {
+                        AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
+                    }
+                }
 
                 return num == 1 ? GetPriceString(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en)
                     : GetPriceStringWithNum(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en, num);

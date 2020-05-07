@@ -36,6 +36,9 @@ namespace Nekonya
         public EVEGameDB EVEDB { get; private set; } = new EVEGameDB();
 
         public MarketDB MarketDB { get; private set; } = new MarketDB();
+
+        public UserDB UserDB { get; private set; } = new UserDB();
+
         public EVEMarketConfig Config { get; private set; }
 
         public NekoCore()
@@ -55,14 +58,14 @@ namespace Nekonya
             if(Config == null)
             {
                 Config = new EVEMarketConfig();
-                File.WriteAllText(conf_path, JsonConvert.SerializeObject(this.Config),Encoding.UTF8);
+                File.WriteAllText(conf_path, JsonConvert.SerializeObject(this.Config, Formatting.Indented),Encoding.UTF8);
             }
         }
 
         public void SaveConfig()
         {
             string conf_path = Path.Combine(AppData.CQApi.AppDirectory, "config.json");
-            File.WriteAllText(conf_path, JsonConvert.SerializeObject(this.Config), Encoding.UTF8);
+            File.WriteAllText(conf_path, JsonConvert.SerializeObject(this.Config, Formatting.Indented), Encoding.UTF8);
         }
     }
 }

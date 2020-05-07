@@ -30,7 +30,9 @@ namespace Nekonya.DBs
                 using(var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
+#pragma warning disable CA2100
                     cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN=\"{name}\" COLLATE NOCASE";
+#pragma warning restore CA2100
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {

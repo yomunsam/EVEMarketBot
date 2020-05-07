@@ -52,7 +52,9 @@ namespace Nekonya.DBs
             using(var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"SELECT * FROM commonly WHERE key='{key}' COLLATE NOCASE";
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 var reader = cmd.ExecuteReader();
                 if (reader.Read())
                 {
@@ -69,7 +71,9 @@ namespace Nekonya.DBs
             using(var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"DELETE FROM commonly WHERE key='{key}'";
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 cmd.ExecuteNonQuery();
             }
         }
@@ -98,7 +102,9 @@ namespace Nekonya.DBs
             using (var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"SELECT * FROM commonly_suit WHERE key='{key}' COLLATE NOCASE";
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 var reader = cmd.ExecuteReader();
                 if (reader.Read())
                 {
@@ -115,7 +121,9 @@ namespace Nekonya.DBs
             using (var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"DELETE FROM commonly_suit WHERE key='{key}'";
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 cmd.ExecuteNonQuery();
             }
         }
@@ -137,7 +145,9 @@ namespace Nekonya.DBs
             using (var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"SELECT * FROM suit WHERE name_hans='{name}'";
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 var reader = cmd.ExecuteReader();
                 if (reader.Read())
                 {
@@ -158,7 +168,9 @@ namespace Nekonya.DBs
             using (var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"SELECT * FROM suit WHERE name_en='{name}' COLLATE NOCASE";
+#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 var reader = cmd.ExecuteReader();
                 if (reader.Read())
                 {
