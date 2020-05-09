@@ -1,9 +1,7 @@
-﻿using Native.Sdk.Cqp.EventArgs;
+using Native.Sdk.Cqp.EventArgs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Nekonya.DBs;
 using Native.Tool.Http;
 using Newtonsoft.Json;
@@ -14,7 +12,7 @@ namespace Nekonya.Jitas
 {
     public class Jitas
     {
-        private static object _lock_obj = new object();
+        private static readonly object _lock_obj = new object();
         private static Jitas _instance;
         public static Jitas Instance
         {
@@ -34,11 +32,11 @@ namespace Nekonya.Jitas
             }
         }
 
-        private EVEGameDB EVEDB = NekoCore.Instance.EVEDB;
-        private MarketDB MarketDB = NekoCore.Instance.MarketDB;
-        private UserDB UserDB = NekoCore.Instance.UserDB;
+        private readonly EVEGameDB EVEDB = NekoCore.Instance.EVEDB;
+        private readonly MarketDB MarketDB = NekoCore.Instance.MarketDB;
+        private readonly UserDB UserDB = NekoCore.Instance.UserDB;
 
-        private const long PLEX_ID = 44992;
+        private const long PLEX_ID = 44992; //神坑：EVE数据库里有两个道具，名字都是PLEX，直接按顺序搜索会收到旧的那个
 
         public void QueryFromGroup(CQGroupMessageEventArgs msg)
         {
