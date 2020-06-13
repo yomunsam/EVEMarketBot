@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using Native.Core.Domain;
 using System.IO;
+using System.Data;
 
 namespace Nekonya.DBs
 {
@@ -30,9 +31,8 @@ namespace Nekonya.DBs
                 using(var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-#pragma warning disable CA2100
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN=\"{name}\" COLLATE NOCASE";
-#pragma warning restore CA2100
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN=@name COLLATE NOCASE";
+                    cmd.Parameters.Add("name", DbType.String).Value = name;
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {
@@ -59,7 +59,9 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name=\"{name}\" COLLATE NOCASE";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name=@name COLLATE NOCASE";
+                    cmd.Parameters.Add("name", DbType.String).Value = name;
+
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {
@@ -86,7 +88,9 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE ID={id}";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE ID=@id";
+                    cmd.Parameters.Add("id", DbType.Int64).Value = id;
+
                     var reader = cmd.ExecuteReader();
                     if (reader.Read())
                     {
@@ -119,7 +123,9 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN LIKE '%{name}%'";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN LIKE '%@name%'";
+                    cmd.Parameters.Add("name", DbType.String).Value = name;
+
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {
@@ -157,7 +163,9 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name LIKE '%{name}%' COLLATE NOCASE";
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name LIKE '%@name%' COLLATE NOCASE";
+                    cmd.Parameters.Add("name", DbType.String).Value = name;
+
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
                     {

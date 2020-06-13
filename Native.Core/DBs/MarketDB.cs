@@ -52,9 +52,7 @@ namespace Nekonya.DBs
             using(var cmd = new SQLiteCommand())
             {
                 cmd.Connection = cn;
-#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                 cmd.CommandText = $"SELECT * FROM commonly WHERE key='{key}' COLLATE NOCASE";
-#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
                 var reader = cmd.ExecuteReader();
                 if (reader.Read())
                 {

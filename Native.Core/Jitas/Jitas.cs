@@ -246,26 +246,43 @@ namespace Nekonya.Jitas
         {
             bool isHans = EVEUtil.IncludeChinese(message);
 
-            
-
-            //解析命令
-            if (EVEUtil.ParseJitaMsg(message, out var source, out List<string> queryText,out long num, ref isHans))
+            try
             {
-                long prop_id;
-                string prop_name_hans;
-                string prop_name_en;
-
-                //防注入
-                if (!EVEUtil.IsSafeSqlString(source))
-                    return (isHans ? $"您要查询的内容不安全：{message}" : $"The content you want to query is not secure: {message}");
-
-                //检查数据库
-                if (!this.TryQueryTexts(ref queryText, isHans, out prop_id, out prop_name_hans, out prop_name_en))
+                //解析命令
+                if (EVEUtil.ParseJitaMsg(message, out var source, out List<string> queryText, out long num, ref isHans))
                 {
-                    //未找到，准备混合搜索
-                    if(this.TryFuzzyQuery(source,isHans,out string fuzzy_result, out bool _continue, out prop_id, out prop_name_hans, out prop_name_en))
+                    long prop_id;
+                    string prop_name_hans;
+                    string prop_name_en;
+
+                    //防注入
+                    if (!EVEUtil.IsSafeSqlString(source))
+                        return (isHans ? $"您要查询的内容不安全：{message}" : $"The content you want to query is not secure: {message}");
+
+                    //检查数据库
+                    if (!this.TryQueryTexts(ref queryText, isHans, out prop_id, out prop_name_hans, out prop_name_en))
                     {
-                        if (!_continue)
+                        //未找到，准备混合搜索
+                        if (this.TryFuzzyQuery(source, isHans, out string fuzzy_result, out bool _continue, out prop_id, out prop_name_hans, out prop_name_en))
+                        {
+                            if (!_continue)
+                            {
+                                //登记查询记录
+                                if (fromQQ != -1)
+                                {
+                                    try
+                                    {
+                                        this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
+                                    }
+                                }
+                                return fuzzy_result;
+                            }
+                        }
+                        else // 混合搜索没找到
                         {
                             //登记查询记录
                             if (fromQQ != -1)
@@ -279,49 +296,39 @@ namespace Nekonya.Jitas
                                     AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
                                 }
                             }
-                            return fuzzy_result;
+                            return isHans ? $"未找到相关物品: {source}" : $"The content you want to query is not exist: {source}";
                         }
                     }
-                    else // 混合搜索没找到
+
+                    //可以继续执行
+                    PriceInfo? world_server_price = GetPriceInfo(prop_id, true);
+                    PriceInfo? cn_server_price = GetPriceInfo(prop_id, false);
+
+                    //登记查询
+                    if (fromQQ != -1)
                     {
-                        //登记查询记录
-                        if (fromQQ != -1)
+                        try
                         {
-                            try
-                            {
-                                this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
-                            }
-                            catch (Exception e)
-                            {
-                                AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
-                            }
+                            this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
                         }
-                        return isHans ? $"未找到相关物品: {source}" : $"The content you want to query is not: {source}";
+                        catch (Exception e)
+                        {
+                            AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
+                        }
                     }
+
+                    return num == 1 ? GetPriceString(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en)
+                        : GetPriceStringWithNum(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en, num);
                 }
-
-                //可以继续执行
-                PriceInfo? world_server_price = GetPriceInfo(prop_id, true);
-                PriceInfo? cn_server_price = GetPriceInfo(prop_id, false);
-
-                //登记查询
-                if(fromQQ != -1)
-                {
-                    try
-                    {
-                        this.UserDB.AddRecord(fromQQ, usernickname, source, nicknameingroup, fromGroup, prop_id);
-                    }
-                    catch(Exception e)
-                    {
-                        AppData.CQLog.Error("EVEMarket", "记录查询时出现异常", e);
-                    }
-                }
-
-                return num == 1 ? GetPriceString(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en)
-                    : GetPriceStringWithNum(world_server_price, cn_server_price, isHans, prop_name_hans, prop_name_en, num);
+                else
+                    return isHans ? $"无效的查询语句: {message}" : $"Query Invalid: {message}";
             }
-            else
-                return isHans ? $"无效的查询语句: {message}" : $"Query Invalid: {message}";
+            catch(Exception e)
+            {
+                return isHans ? $"内部错误，请将错误信息汇报给开发者，谢谢。\n：{e.Message}\n堆栈信息：\n{e.StackTrace}" : $"Internal error, please report the error information to the developer, thank you.\n{e.Message}\nStackTrace:\n{e.StackTrace}";
+            }
+
+            
         }
 
         /// <summary>
