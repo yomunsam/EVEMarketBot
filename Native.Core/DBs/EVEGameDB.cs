@@ -123,8 +123,8 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN LIKE '%@name%'";
-                    cmd.Parameters.Add("name", DbType.String).Value = name;
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name_CN LIKE @name";
+                    cmd.Parameters.Add("name", DbType.String).Value = $"%{name}%";
 
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
@@ -163,8 +163,8 @@ namespace Nekonya.DBs
                 using (var cmd = new SQLiteCommand())
                 {
                     cmd.Connection = cn;
-                    cmd.CommandText = $"SELECT * FROM Props WHERE Name LIKE '%@name%' COLLATE NOCASE";
-                    cmd.Parameters.Add("name", DbType.String).Value = name;
+                    cmd.CommandText = $"SELECT * FROM Props WHERE Name LIKE @name COLLATE NOCASE";
+                    cmd.Parameters.Add("name", DbType.String).Value = $"%{name}%";
 
                     var reader = cmd.ExecuteReader();
                     if (!reader.HasRows)
