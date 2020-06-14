@@ -14,6 +14,7 @@ namespace DataConvert
         private static YamlScalarNode ScalarNode_Name_En = new YamlScalarNode("en");
         private static YamlScalarNode ScalarNode_Name_Cn = new YamlScalarNode("zh");
         private static YamlScalarNode ScalarNode_GroupId = new YamlScalarNode("groupID");
+        private static YamlScalarNode ScalarNode_Published = new YamlScalarNode("published");
         private static YamlScalarNode ScalarNode_Volume = new YamlScalarNode("volume");
         public static void StartHandler(string path)
         {
@@ -37,19 +38,45 @@ namespace DataConvert
                     {
                         //忽略项
                         if (IgnoreDefine.Ignore_IDs.Contains(id))
+                        {
+                            Console.WriteLine($"    Id {id}的项目被强行忽略了╰（‵□′）╯");
                             continue;
+                        }
                         //查询
                         if (db.Props.Any(p => p.ID == id))
+                        {
+                            Console.WriteLine($"    Id {id}的项目已存在，不读取了");
                             continue;
+                        }
 
                         var prop_obj = new PropData();
                         var map_node = (YamlMappingNode)entry.Value;
                         var names = (YamlMappingNode)(map_node.Children[ScalarNode_Name]);
                         var name_en = names.Children[ScalarNode_Name_En].ToString();
-                        var name_cn = names.Children[ScalarNode_Name_Cn].ToString();
+                        string name_cn = name_en;
+                        try
+                        {
+                            name_cn = names.Children[ScalarNode_Name_Cn].ToString();
+                        }
+                        catch
+                        {
+                            name_cn = name_en;
+                        }
                         var group_id = (YamlScalarNode)(map_node.Children[ScalarNode_GroupId]);
+                        var published = (YamlScalarNode)(map_node.Children[ScalarNode_Published]);
 
-
+                        if(bool.TryParse(published.Value, out bool b_p))
+                        {
+                            if(!b_p)
+                            {
+                                Console.WriteLine($"    [{(string.IsNullOrEmpty(name_cn) ? name_cn : name_en)}] 未发布，已忽略");
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
 
                         prop_obj.Name = name_en;
                         prop_obj.Name_CN = name_cn;
@@ -74,11 +101,11 @@ namespace DataConvert
 
                     }
                 }
-                catch
+                catch(Exception e)
                 {
-
+                    Console.WriteLine($"    出现异常：" + e.Message);
                 }
-                
+
             }
 
             db.SaveChanges();

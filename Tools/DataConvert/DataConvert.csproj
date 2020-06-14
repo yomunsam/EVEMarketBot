@@ -15,10 +15,4 @@
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="eve_static.db">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
